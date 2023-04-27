@@ -4,7 +4,11 @@
     x1-x2<=4
     -x1+x2<=4
 '''
+
+FILE_NAME = res = "model.json"
+
 import json
+import numpy
 
 class Matrix:
     def __init__(self, data=0) -> None:
@@ -38,7 +42,7 @@ class Matrix:
             self.columns += 1
         self.rows += 1
     
-    def get_item(self, r, c) -> int:
+    def get_item(self, r, c) -> float:
         return self.items[r][c]
     
     def get_size_rows(self) -> int:
@@ -46,6 +50,16 @@ class Matrix:
 
     def get_size_columns(self) -> int:
         return self.columns
+    
+    def get_row(self, r) -> list:
+        row = []
+        for c in range(self.columns):
+            row.append(self.items[r][c])
+        return row
+
+    def set_row(self, r, L) -> None:
+        for c in range(self.columns):
+            self.items[r][c] = L[c]
 
 class Vector:
     def __init__(self, data=0) -> None:
@@ -66,18 +80,23 @@ class Vector:
     def insert_item(self, item):
         self.items.append(item)
         self.rows += 1
+    
+    def get_item(self, r) -> float:
+        return self.items[r]
+
+    def set_item(self, r, item) -> None:
+        self.items[r] = item        
 
 def read_from_json():
-    file = open("model.json", "r", encoding="utf-8")
+    file = open(FILE_NAME, "r", encoding="utf-8")
     model = json.load(file)
     file.close()
     return model
 
-def gaus_jordan_method(coeff, lamb, stakes) -> Vector:
+def gaus_jordan_method(coeff, stakes) -> Vector:
     '''Gaus Jordan'''
     '''ax = b'''
     a = coeff
-    x = lamb
     b = stakes
 
     '''
@@ -107,9 +126,77 @@ def gaus_jordan_method(coeff, lamb, stakes) -> Vector:
     x3 = (11 - (-3)*(-1) - (2)*(3))/1 = 2
     '''
 
-    '''Use decomposition to find triangular matrix'''
+    row_already_used_as_pivot = []
+    m = [] #matrix m is a transposed matrix
+    c = 0
+    while c < a.get_size_columns():
+        # print(c)
+        '''Lets find a pivot for column c'''
+        pivot_line_index = 0
+        while(pivot_line_index >= 0):
+            pivot = a.get_item(pivot_line_index, c)
+            if pivot != 0 and not (pivot_line_index in row_already_used_as_pivot):
+                row_already_used_as_pivot.append(pivot_line_index)
+                break
+            else:
+                # find another pivot
+                # assuming that there is always a valid pivot in column
+                pivot_line_index += 1
+        # print(pivot)
 
-    return 0
+        '''with the pivot, lets find multiplayers for other lines'''
+        m.append([])
+        for i in range(a.get_size_rows()):
+            if i != pivot_line_index:
+                # saving multiplier for that line
+                m[c].append(-a.get_item(i,c)/pivot)
+            else:
+                # pivot's line will not change
+                m[c].append(0)
+        # print(m)
+        
+        '''recover rows and sub mci*pivot_row from other rows'''
+        pivot_L = a.get_row(pivot_line_index)
+        for i in range(a.get_size_rows()):
+            if not i in row_already_used_as_pivot:
+                
+                # coeff
+                L = a.get_row(i)
+                # print('----------------')
+                # print('{}*{}'.format(m[c][i], pivot_L))
+                # print('{} + {}'.format(numpy.multiply(m[c][i],pivot_L), L))
+                L = numpy.add(numpy.multiply(m[c][i],pivot_L), L)
+                # print(L)
+                # print('----------------')
+                a.set_row(i, L)
+
+                # stakes
+                item = b.get_item(i)
+                
+                b.set_item(i, m[c][i]*b.get_item(pivot_line_index) + item)
+
+        '''to the next column'''
+        c += 1
+    # print(a)
+    # print(b)
+
+    '''finally find values for variables'''
+    X = [0 for x in range(a.get_size_columns())]
+    i = a.get_size_rows() - 1
+    while(i >= 0):
+        sum = 0
+        for j in range(a.get_size_columns()):
+            sum += a.get_item(i,j)*X[j]
+        sum = b.get_item(i) - sum
+        X[i] = sum/a.get_item(i, i)
+        i -= 1
+    # print(X)
+
+    '''as you can see I'm a dumb and I found X vector reversed'''
+    X = X[::-1]
+    # print(X)
+
+    return X
 
 def main():
     
@@ -162,13 +249,32 @@ def main():
     
     '''Find Lambda'''
     # at first lambda vector will be declared as [1 1 1]
-    one_data = [1 for x in range(B.get_size_columns())]
-    lamb = Vector(one_data)
-    # print(lamb)
-
     # Let us use Gauss Jordan Method to solve equations
-    lamb = gaus_jordan_method(BT, lamb, CB)
+    lamb = gaus_jordan_method(BT, CB)
 
+    # Let us calculate Xb
+    Xb = gaus_jordan_method(B, b)
+
+    # Let us find non basic costs
+    # while():
+        # Cx[c] = CN[c] - lambT*a.get_column(c)
+    
+    # if there is a Cx[c] < 0:
+        # find y related to the candidate Cx[c]
+
+        # find epsolon
+
+        # find new base and non base
+        
+        # show function current value
+
+        # keep loop
+    # else:
+        # already solution
+
+        # break
+
+    # show function final value
 
 if __name__ == "__main__":
     main()
