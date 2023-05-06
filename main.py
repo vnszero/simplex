@@ -1,8 +1,12 @@
 '''
-    f=-x1+x2
+    f = - x1 - 2x2
     x1+x2<=6
     x1-x2<=4
     -x1+x2<=4
+
+    x3 + x2 = 6 => x3 = 2
+    x4 - x2 = 4 => x4 = 8
+    x2 = 4      => x2 = 4
 '''
 
 FILE_NAME = res = "model.json"
@@ -34,7 +38,7 @@ class Matrix:
             output += ']\n'
         return output
 
-    def insert_row(self, row) -> None:
+    def insert_row(self, row:list) -> None:
         self.items.append([])
         self.columns = 0
         for item in row:
@@ -42,7 +46,7 @@ class Matrix:
             self.columns += 1
         self.rows += 1
     
-    def get_item(self, r, c) -> float:
+    def get_item(self, r:int, c:int) -> float:
         return self.items[r][c]
     
     def get_size_rows(self) -> int:
@@ -51,15 +55,25 @@ class Matrix:
     def get_size_columns(self) -> int:
         return self.columns
     
-    def get_row(self, r) -> list:
+    def get_row(self, r:int) -> list:
         row = []
         for c in range(self.columns):
             row.append(self.items[r][c])
         return row
 
-    def set_row(self, r, L) -> None:
+    def set_row(self, r:int, L:list) -> None:
         for c in range(self.columns):
             self.items[r][c] = L[c]
+    
+    def get_column(self, c:int) -> list:
+        column = []
+        for r in range(self.rows):
+            column.append(self.items[r][c])
+        return column
+
+    def set_column(self, c:int, K:list) -> None:
+        for r in range(self.rows):
+            self.items[r][c] = K[r]
 
 class Vector:
     def __init__(self, data=0) -> None:
@@ -77,15 +91,18 @@ class Vector:
             output += '[ '+str(i)+' ]\n'
         return output
 
-    def insert_item(self, item):
+    def insert_item(self, item:float):
         self.items.append(item)
         self.rows += 1
     
-    def get_item(self, r) -> float:
+    def get_item(self, r:int) -> float:
         return self.items[r]
 
-    def set_item(self, r, item) -> None:
-        self.items[r] = item        
+    def set_item(self, r:int, item:float) -> None:
+        self.items[r] = item
+
+    def get_size(self) -> int:
+        return self.rows      
 
 def read_from_json():
     file = open(FILE_NAME, "r", encoding="utf-8")
@@ -93,11 +110,20 @@ def read_from_json():
     file.close()
     return model
 
-def gaus_jordan_method(coeff, stakes) -> Vector:
+def gaus_jordan_method(coeff:Matrix, stakes:Vector) -> Vector:
     '''Gaus Jordan'''
     '''ax = b'''
-    a = coeff
-    b = stakes
+    # to avoid memory sharing of variables from main
+    # must create then again to keep their values
+    a = Matrix()
+    b = Vector()
+    for r in range(coeff.get_size_rows()):
+        a.insert_row(coeff.get_row(r))
+    # print(a)
+
+    for r in range(stakes.get_size()):
+        b.insert_item(stakes.get_item(r))
+    # print(b)
 
     '''
     EX.:
@@ -173,6 +199,7 @@ def gaus_jordan_method(coeff, stakes) -> Vector:
                 # stakes
                 item = b.get_item(i)
                 
+                # print('{}*{}+{}'.format(m[c][i],b.get_item(pivot_line_index),item))
                 b.set_item(i, m[c][i]*b.get_item(pivot_line_index) + item)
 
         '''to the next column'''
@@ -187,16 +214,20 @@ def gaus_jordan_method(coeff, stakes) -> Vector:
         sum = 0
         for j in range(a.get_size_columns()):
             sum += a.get_item(i,j)*X[j]
+            # print("s = {}*{}".format(a.get_item(i,j),X[j]))
+        # print("{} - {}".format(b.get_item(a.get_size_rows() - 1 - i), sum))
         sum = b.get_item(i) - sum
         X[i] = sum/a.get_item(i, i)
         i -= 1
     # print(X)
 
-    '''as you can see I'm a dumb and I found X vector reversed'''
-    X = X[::-1]
-    # print(X)
-
     return X
+
+def scalar_product(V1n, Vn1) -> float:
+    sum = 0
+    for i in range(len(V1n)):
+        sum += V1n[i]*Vn1[i]
+    return sum
 
 def main():
     
@@ -238,7 +269,7 @@ def main():
     index = 0
     CB = Vector()   # base coefficients vector
     CN = Vector()   # non base coefficients vector
-    for name,coeff in C:
+    for coeff in C:
         if index < B.get_size_columns():
             CB.insert_item(coeff)
         else:
@@ -250,23 +281,85 @@ def main():
     '''Find Lambda'''
     # at first lambda vector will be declared as [1 1 1]
     # Let us use Gauss Jordan Method to solve equations
-    lamb = gaus_jordan_method(BT, CB)
+    lambT = gaus_jordan_method(BT, CB)
+    lamb = Vector(lambT)
+    # print(lamb)
 
     # Let us calculate Xb
-    Xb = gaus_jordan_method(B, b)
+    Xb = Vector(gaus_jordan_method(B, b))
+    # print(Xb)
 
     # Let us find non basic costs
-    # while():
-        # Cx[c] = CN[c] - lambT*a.get_column(c)
-    
+    Cxn = []
+    lower = 10 # any number greater then zero must work
+    lower_key = 0
+    for i in range(CN.rows):
+        Cxn.append(CN.get_item(i) - scalar_product(lambT,A.get_column(i)))
+        if lower > Cxn[i]:
+            lower = Cxn[i]
+            lower_key = i
+    # print(lower)
+    # print(lower_key)
+
     # if there is a Cx[c] < 0:
-        # find y related to the candidate Cx[c]
+    if lower < 0:
+        # find y related to the candidate Cxn[i]
+        y = Vector(gaus_jordan_method(B, Vector(A.get_column(lower_key))))
+        # print(y)
 
         # find epsolon
+        epsolon = 10000
+        epsolon_key = 0
+        for i in range(y.get_size()):
+            if y.get_item(i) > 0:
+                holder = Xb.get_item(i)/y.get_item(i)
+                if epsolon > holder:
+                    epsolon = holder
+                    epsolon_key = i
+        # print(epsolon)
+        # print(epsolon_key)
 
-        # find new base and non base
+        # show new base and non base
+        # print(C)
+        # print(B)
+        # print(CB)
+        # print(N)
+        # print(CN)
+        # print('========')
+
+        # recover info from base and non base matrices
+        base_column_epsolon = B.get_column(epsolon_key)
+        non_base_column_lower = N.get_column(lower_key)
+        func_coeff_epsolon = C[epsolon_key]
+        func_coeff_lower = C[lower_key + 3]
+        base_coeff_epsolon = CB.get_item(epsolon_key)
+        non_base_coeff_lower = CN.get_item(lower_key)
         
-        # show function current value
+        # column swap
+        B.set_column(epsolon_key, non_base_column_lower)
+        N.set_column(lower_key, base_column_epsolon)
+        C[epsolon_key] = func_coeff_lower
+        C[lower_key + 3] = func_coeff_epsolon
+        CB.set_item(epsolon_key, non_base_coeff_lower)
+        CN.set_item(lower_key, base_coeff_epsolon)
+
+        # show new base and non base
+        # print(C)
+        # print(B)
+        # print(CB)
+        # print(N)
+        # print(CN)
+        # print('========')
+
+        # find the values to Xs
+        Xs = gaus_jordan_method(B,b) 
+        # print(B)
+        # print(Xs)
+        # print(b)
+
+        # show the current value for the f(x)
+        print(C[:3])
+        print(scalar_product(Xs,C[:3]))
 
         # keep loop
     # else:
