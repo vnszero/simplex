@@ -331,7 +331,7 @@ def main():
         base_column_epsolon = B.get_column(epsolon_key)
         non_base_column_lower = N.get_column(lower_key)
         func_coeff_epsolon = C[epsolon_key]
-        func_coeff_lower = C[lower_key + 3]
+        func_coeff_lower = C[lower_key + B.get_size_columns()]
         base_coeff_epsolon = CB.get_item(epsolon_key)
         non_base_coeff_lower = CN.get_item(lower_key)
         
@@ -339,7 +339,7 @@ def main():
         B.set_column(epsolon_key, non_base_column_lower)
         N.set_column(lower_key, base_column_epsolon)
         C[epsolon_key] = func_coeff_lower
-        C[lower_key + 3] = func_coeff_epsolon
+        C[lower_key + B.get_size_columns()] = func_coeff_epsolon
         CB.set_item(epsolon_key, non_base_coeff_lower)
         CN.set_item(lower_key, base_coeff_epsolon)
 
@@ -358,8 +358,8 @@ def main():
         # print(b)
 
         # show the current value for the f(x)
-        print(C[:3])
-        print(scalar_product(Xs,C[:3]))
+        print(C[:B.get_size_columns()])
+        print(scalar_product(Xs,C[:B.get_size_columns()]))
 
         # keep loop
     # else:
