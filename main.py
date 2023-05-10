@@ -55,14 +55,17 @@ def main():
 
     '''Find Transposed Xs' values'''
     XsT = gaus_method(B,b)
+    print('values of Xs:')
     print('{}\n'.format(XsT)) 
 
     '''History of changes'''
+    print('base:')
     print(CB)
+    print('non-base:')
     print(CN)
 
     '''Show current value for the f(x)'''
-    print('f(x) = {}\n=============='.format(scalar_product_method(XsT,CB)))
+    print('f(x) = {}\n'.format(scalar_product_method(XsT,CB)))
 
     while 1:
         '''Find BT'''
@@ -85,6 +88,11 @@ def main():
         for i in range(CN.rows):
             Cxn.append(CN.get_item(i) - scalar_product_method(lambT,Vector(A.get_column(i))))
         
+        '''Show relatives'''
+        print('Values of Cxn')
+        print(Cxn)
+        print('==============')
+
         '''Get the lower one and make a decision'''
         lower = min(Cxn)
         lower_key = Cxn.index(lower)
@@ -119,14 +127,17 @@ def main():
 
             '''Find Transposed Xs' values'''
             XsT = gaus_method(B,b)
+            print('values of Xs:')
             print('{}\n'.format(XsT)) 
 
             '''History of changes'''
+            print('base:')
             print(CB)
+            print('non-base:')
             print(CN)
 
             '''Show current value for the f(x)'''
-            print('f(x) = {}\n=============='.format(scalar_product_method(XsT,CB)))
+            print('f(x) = {}\n'.format(scalar_product_method(XsT,CB)))
 
             '''keep loop'''
 
@@ -135,14 +146,17 @@ def main():
 
             '''Find Transposed Xs' values'''
             XsT = gaus_method(B,b)
+            print('values of Xs:')
             print('{}\n'.format(XsT)) 
 
             '''History of changes'''
+            print('base:')
             print(CB)
+            print('non-base:')
             print(CN)
 
             '''Show current value for the f(x)'''
-            print('f(x) = {}\n=============='.format(scalar_product_method(XsT,CB)))
+            print('f(x) = {}\n'.format(scalar_product_method(XsT,CB)))
 
             '''stop loop'''
             break
