@@ -1,13 +1,17 @@
-import numpy
+import numpy as np
 from classes import Vector, Matrix
 
-def scalar_product_method(V1n:list, Vn1:Vector) -> float:
-    sum = 0
-    for i in range(len(V1n)):
-        sum += V1n[i]*Vn1.get_item(i)
-    return sum
+def scalar_product_method(V1n: list, Vn1: Vector) -> float:
+    if len(V1n) != Vn1.get_size():
+        raise ValueError("Tamanhos incompatíveis entre o vetor V1n e o objeto Vector")
 
-def gaus_method(coeff:Matrix, stakes:Vector) -> Vector:
+    result = 0
+    for i in range(len(V1n)):
+        result += V1n[i] * Vn1.get_item(i)
+    
+    return result
+
+def gaus_method(coeff, stakes):
     # CAMPOS, Frederico Ferreira. Algoritmos Numericos. Editora LTC, 2001.
 
     '''
@@ -39,68 +43,53 @@ def gaus_method(coeff:Matrix, stakes:Vector) -> Vector:
         x1 = (11 - (-3)*(-1) - (2)*(3))/1 = 2
     '''
 
-    # to avoid memory sharing of variables from main we must create then again to keep their values outside this function
-    a = Matrix()
-    b = Vector()
-    for r in range(coeff.get_size_rows()):
-        a.insert_row(coeff.get_row(r))
-
-    for r in range(stakes.get_size()):
-        b.insert_item(stakes.get_item(r))
+    a = Matrix(coeff.items)  # Copy the matrix instead of inserting rows one by one
+    b = Vector(stakes.items)  # Copy the vector instead of inserting items one by one
 
     row_already_used_as_pivot = []
     multipliers = []
     c = 0
     while c < a.get_size_columns():
-        '''Find a pivot for column c'''
+        # Find a pivot for column c
         pivot_line_index = 0
-        while(pivot_line_index >= 0):
+        while pivot_line_index >= 0:
             pivot = a.get_item(pivot_line_index, c)
-            if pivot != 0 and not (pivot_line_index in row_already_used_as_pivot):
-                '''Save current line to don't use it again'''
+            if pivot != 0 and pivot_line_index not in row_already_used_as_pivot:
                 row_already_used_as_pivot.append(pivot_line_index)
                 break
             else:
-                '''Find another pivot'''
-                # assuming that there is always a valid pivot in column
                 pivot_line_index += 1
 
-        '''Find multiplayers for other lines'''
+        # Find multipliers for other lines
         multipliers.append([])
         for i in range(a.get_size_rows()):
             if i != pivot_line_index:
-                '''Save multiplier for that line'''
-                multipliers[c].append(-a.get_item(i,c)/pivot)
+                multipliers[c].append(-a.get_item(i, c) / pivot)
             else:
-                '''Pivot's line will not change'''
                 multipliers[c].append(0)
         
-        '''Recover rows and sub mci*pivot_row from other rows'''
+        # Update rows and subtract mci*pivot_row from other rows
         pivot_L = a.get_row(pivot_line_index)
         for i in range(a.get_size_rows()):
-            if not i in row_already_used_as_pivot:
-                
-                '''Sum lines'''
+            if i not in row_already_used_as_pivot:
                 L = a.get_row(i)
-                L = numpy.add(numpy.multiply(multipliers[c][i],pivot_L), L)
+                L = np.add(np.multiply(multipliers[c][i], pivot_L), L)
                 a.set_row(i, L)
 
-                '''Sum stakes'''
                 item = b.get_item(i)
-                b.set_item(i, multipliers[c][i]*b.get_item(pivot_line_index) + item)
+                b.set_item(i, multipliers[c][i] * b.get_item(pivot_line_index) + item)
 
-        '''to the next column'''
         c += 1
 
-    '''finally find values for variables'''
-    X = [0 for x in range(a.get_size_columns())]
+    # Solve for variables
+    X = [0 for _ in range(a.get_size_columns())]
     i = a.get_size_rows() - 1
-    while(i >= 0):
+    while i >= 0:
         sum = 0
         for j in range(a.get_size_columns()):
-            sum += a.get_item(i,j)*X[j]
+            sum += a.get_item(i, j) * X[j]
         sum = b.get_item(i) - sum
-        X[i] = sum/a.get_item(i, i)
+        X[i] = sum / a.get_item(i, i)
         i -= 1
 
     return X
