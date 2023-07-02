@@ -12,12 +12,12 @@ class Matrix:
     def __str__(self):
         output = ''
         for i in range(self.rows):
-            output += '[\t'
+            output += '[    '
             for j in range(self.columns):
                 if j < len(self.items[i]):
-                    output += str(self.items[i][j])+'\t'
+                    output += str(self.items[i][j])+'   '
                 else:
-                    output += '0\t'  # Fill missing values with 0
+                    output += '0    '  # Fill missing values with 0
             output += ']\n'
         return output
 
@@ -77,7 +77,7 @@ class Vector:
     def __str__(self):
         output = ''
         for i in self.items:
-            output += '[ '+str(i)+' ]\n'
+            output += '[    '+str(i)+'  ]\n'
         return output
 
     def insert_item(self, item):

@@ -34,54 +34,70 @@ def find_optimal_solution(CB, CN, B, N, A, b):
 
         lambT = gaus_method(BT, CB)
         Xb = Vector(gaus_method(B, b))
-
         Cxn = []
         for i in range(CN.get_size()):
-            column = Vector(A.get_column(i))
+            column = Vector(N.get_column(i))
             Cxn.append(CN.get_item(i) - scalar_product_method(lambT, column))
 
         print('Values of Cxn')
         print(Cxn)
         print('==============')
 
-        there_is_zero = False
-        if 0 in Cxn:
-            there_is_zero = True
+        # there_is_zero = False
+        # if 0 in Cxn:
+        #     there_is_zero = True
         lower = min(Cxn)
         lower_key = Cxn.index(lower)
         keyboard = int(input('0 to exit or other to continue: '))
-        if lower < 0 and not there_is_zero and keyboard:
-            y = Vector(gaus_method(B, Vector(A.get_column(lower_key))))
-
+        if lower < 0 and keyboard:
+            y = Vector(gaus_method(B, Vector(N.get_column(lower_key))))
+            there_is_epsolon  = False
             epsolon = 10000
             epsolon_key = 0
             for i in range(y.get_size()):
                 if y.get_item(i) > 0:
                     holder = Xb.get_item(i) / y.get_item(i)
+                    there_is_epsolon = True
                     if epsolon > holder:
                         epsolon = holder
                         epsolon_key = i
+            
+            if there_is_epsolon:
+                base_column_epsolon = B.get_column(epsolon_key)
+                non_base_column_lower = N.get_column(lower_key)
+                base_coeff_epsolon = CB.get_item(epsolon_key)
+                non_base_coeff_lower = CN.get_item(lower_key)
 
-            base_column_epsolon = B.get_column(epsolon_key)
-            non_base_column_lower = N.get_column(lower_key)
-            base_coeff_epsolon = CB.get_item(epsolon_key)
-            non_base_coeff_lower = CN.get_item(lower_key)
+                B.set_column(epsolon_key, non_base_column_lower)
+                N.set_column(lower_key, base_column_epsolon)
+                CB.set_item(epsolon_key, non_base_coeff_lower)
+                CN.set_item(lower_key, base_coeff_epsolon)
 
-            B.set_column(epsolon_key, non_base_column_lower)
-            N.set_column(lower_key, base_column_epsolon)
-            CB.set_item(epsolon_key, non_base_coeff_lower)
-            CN.set_item(lower_key, base_coeff_epsolon)
+                XsT = gaus_method(B, b)
+                print('values of Xs:')
+                print('{}\n'.format(XsT))
 
-            XsT = gaus_method(B, b)
-            print('values of Xs:')
-            print('{}\n'.format(XsT))
+                print('base:')
+                print(CB)
+                print('non-base:')
+                print(CN)
 
-            print('base:')
-            print(CB)
-            print('non-base:')
-            print(CN)
+                print('f(x) = {}\n'.format(scalar_product_method(XsT, CB)))
+            
+            else:
+                print("there's no valid epsolon\n")
 
-            print('f(x) = {}\n'.format(scalar_product_method(XsT, CB)))
+                XsT = gaus_method(B, b)
+                print('values of Xs:')
+                print('{}\n'.format(XsT))
+
+                print('base:')
+                print(CB)
+                print('non-base:')
+                print(CN)
+
+                print('f(x) = {}\n'.format(scalar_product_method(XsT, CB)))
+                break
 
         else:
             XsT = gaus_method(B, b)
@@ -118,10 +134,10 @@ def main():
     CB = Vector()
     CN = Vector()
     for i, coeff in enumerate(variables['C']):
-        if i < len(variables['B']):
-            CB.insert_item(coeff)
-        else:
+        if i < len(variables['N'][0]):
             CN.insert_item(coeff)
+        else:
+            CB.insert_item(coeff)
     
     B = Matrix(variables['B'])
     b = Vector(variables['b'])
@@ -141,7 +157,6 @@ def main():
     A = Matrix(variables['A'])
     b = Vector(variables['b'])
     find_optimal_solution(CB, CN, B, N, A, b)
-
 
 if __name__ == "__main__":
     main()
